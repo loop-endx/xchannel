@@ -1,5 +1,5 @@
 mod restful;
-mod device;
+mod driver;
 
 use restful::REST;
 

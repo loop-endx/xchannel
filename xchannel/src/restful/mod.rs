@@ -4,7 +4,6 @@ use tokio;
 use warp::{http::Uri, Filter};
 
 use crate::driver::drivers::Drivers;
-//use crate::driver::{Drivers, DriverInfo};
 
 #[derive(Debug)]
 pub struct REST {

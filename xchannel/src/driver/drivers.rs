@@ -1,17 +1,18 @@
 //use std::fmt;
 
-use crate::driver::{Driver, DriverInfo};
+use crate::driver::DriverInfo;
 
-struct ModbusRTUSetting {}
-struct ModbusTCPSetting {}
+//struct ModbusRTUSetting {}
+//struct ModbusTCPSetting {}
 
-enum DriverT {
-    ModbusRTU(Box<dyn Driver<Setting = ModbusRTUSetting>>),
-    ModbusTCP(Box<dyn Driver<Setting = ModbusTCPSetting>>),
-}
+//enum DriverT {
+//ModbusRTU(Box<dyn Driver<Setting = ModbusRTUSetting>>),
+//ModbusTCP(Box<dyn Driver<Setting = ModbusTCPSetting>>),
+//}
 
+#[warn(dead_code)]
 pub struct Drivers {
-    drivers: Vec<DriverT>,
+    drivers: Vec<u8>,
 }
 
 impl Drivers {

@@ -1,8 +1,13 @@
-pub struct Tag {
+pub struct Tag<T> {
     name: String,
-    address: String,
+    address: T,
     value: Value,
     description: String,
+}
+
+pub enum Endian {
+    Big,
+    Little,
 }
 
 pub enum Value {

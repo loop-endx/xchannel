@@ -3,7 +3,7 @@ use std::io::{Cursor, Error, ErrorKind};
 use byteorder::{BigEndian, ReadBytesExt as _};
 use bytes::{BufMut, Bytes, BytesMut};
 
-use super::{Exception, ExceptionResponse, Request, RequestPdu, Response, ResponsePdu};
+use super::{Exception, Request, Response};
 
 fn bool_to_coil(state: bool) -> u16 {
     if state {
@@ -89,7 +89,6 @@ impl TryFrom<Bytes> for Response {
 
         let mut rdr = Cursor::new(&bytes);
         let function = rdr.read_u8()?;
-
         let rsp = match function {
             0x01 => {
                 let byte_count = rdr.read_u8()?;
@@ -145,6 +144,11 @@ impl TryFrom<Bytes> for Response {
                 let quantity = rdr.read_u16::<BigEndian>()?;
                 WriteMultipleRegisters(address, quantity)
             }
+            code if code > 0x80 => {
+                let function = function - 0x80;
+                let exception = Exception::try_from(rdr.read_u8()?)?;
+                ExceptionResponse(function, exception)
+            }
             _ => {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
@@ -154,29 +158,6 @@ impl TryFrom<Bytes> for Response {
         };
 
         Ok(rsp)
-    }
-}
-
-impl TryFrom<Bytes> for ExceptionResponse {
-    type Error = Error;
-
-    fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
-        let mut rdr = Cursor::new(&bytes);
-        let err_code = rdr.read_u8()?;
-
-        if err_code < 0x80 {
-            return Err(Error::new(
-                ErrorKind::InvalidData,
-                format!("Invalid exception code: {}", err_code),
-            ));
-        }
-
-        let function = err_code - 0x80;
-        let exception = Exception::try_from(rdr.read_u8()?)?;
-        Ok(ExceptionResponse {
-            function,
-            exception,
-        })
     }
 }
 
@@ -205,38 +186,5 @@ impl TryFrom<u8> for Exception {
         };
 
         Ok(ex)
-    }
-}
-
-impl TryFrom<Bytes> for ResponsePdu {
-    type Error = Error;
-
-    fn try_from(value: Bytes) -> Result<Self, Self::Error> {
-        let code = Cursor::new(&value).read_u8()?;
-        if code < 0x80 {
-            Ok(Response::try_from(value)?.into())
-        } else {
-            Ok(ExceptionResponse::try_from(value)?.into())
-        }
-    }
-}
-
-impl<'a> TryFrom<RequestPdu<'a>> for Bytes {
-    type Error = Error;
-
-    fn try_from(value: RequestPdu<'a>) -> Result<Self, Self::Error> {
-        Ok(value.0.into())
-    }
-}
-
-impl From<Response> for ResponsePdu {
-    fn from(value: Response) -> Self {
-        ResponsePdu(Ok(value))
-    }
-}
-
-impl From<ExceptionResponse> for ResponsePdu {
-    fn from(value: ExceptionResponse) -> Self {
-        ResponsePdu(Err(value))
     }
 }

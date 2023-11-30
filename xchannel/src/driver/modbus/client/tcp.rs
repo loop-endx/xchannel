@@ -1,5 +1,5 @@
 use std::{
-    io::{Error, ErrorKind},
+    io::Error,
     sync::atomic::{AtomicU16, Ordering},
 };
 
@@ -9,8 +9,8 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_util::codec::Framed;
 
 use super::super::protocol::{
-    Request, RequestPdu, Response, ResponsePdu,
-    tcp::{Header, ClientCodec, RequestAdu},
+    tcp::{ClientCodec, Header, RequestAdu},
+    Request, Response,
 };
 
 use super::Client;
@@ -42,7 +42,7 @@ where
 
     pub fn next_request_adu<'a, R>(&self, slave_id: u8, req: R) -> RequestAdu<'a>
     where
-        R: Into<RequestPdu<'a>>,
+        R: Into<Request<'a>>,
     {
         let header = Header {
             transaction_id: self.next_transaction_id(),
@@ -50,7 +50,7 @@ where
         };
         RequestAdu {
             header,
-            pdu: req.into(),
+            request: req.into(),
         }
     }
 }
@@ -73,9 +73,6 @@ where
             .await
             .ok_or_else(|| Error::last_os_error())??;
 
-        match res_adu.pdu {
-            ResponsePdu(Ok(_res)) => Err(Error::new(ErrorKind::InvalidData, "unexpected response")),
-            ResponsePdu(Err(err)) => Err(Error::new(ErrorKind::Other, err)),
-        }
+        Ok(res_adu.response)
     }
 }

@@ -1,16 +1,20 @@
-pub mod drivers;
-pub mod tag;
+use std::io::Error;
+
+use async_trait::async_trait;
+use serde::ser::SerializeStruct;
+use serde::Serialize;
+
+use crate::tag::Tag;
 
 pub mod modbus;
 
-use serde::ser::SerializeStruct;
-use serde::Serialize;
-pub struct DriverInfo {
-    pub name: String,
-    pub description: String,
+pub struct DriverInfo<'a> {
+    pub name: &'a str,
+    pub description: &'a str,
+    pub version: &'a str,
 }
 
-impl Serialize for DriverInfo {
+impl<'a> Serialize for DriverInfo<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -18,21 +22,30 @@ impl Serialize for DriverInfo {
         let mut state = serializer.serialize_struct("DriverInfo", 2)?;
         state.serialize_field("name", &self.name)?;
         state.serialize_field("description", &self.description)?;
+        state.serialize_field("version", &self.version)?;
         state.end()
     }
 }
 
-pub trait Driver {
+struct Context<T, S> {
+    context: T,
+    tags: Vec<Tag<S>>,
+}
+
+#[async_trait]
+pub trait Driver<S> {
     type Setting;
     type Address;
+    type Context;
 
-    fn info(&self) -> DriverInfo;
-    fn setting(&self, setting: Self::Setting) -> Result<(), String>;
-    fn validate(&self, tags: Vec<tag::Tag<Self::Address>>) -> Result<u16, String>;
+    fn new() -> Self;
+    fn info() -> DriverInfo<'static>;
+    fn validate(tags: Vec<Tag<S>>) -> Result<(), Error>;
 
-    fn start(&self) -> Result<(), String>;
-    fn stop(&self) -> Result<(), String>;
+    async fn setting(&self, setting: Self::Setting) -> Result<(), Error>;
+    async fn start(&self) -> Result<(), Error>;
+    async fn stop(&self) -> Result<(), Error>;
 
-    fn read(&self, tags: Vec<tag::Tag<Self::Address>>) -> Result<(), String>;
-    fn write(&self, tags: Vec<tag::Tag<Self::Address>>) -> Result<(), String>;
+    async fn scan(&self, &mut context: Self::Context) -> Result<Vec<Tag<S>>, Error>;
+    async fn write(&self, &context: Self::Context) -> Result<(), Error>;
 }

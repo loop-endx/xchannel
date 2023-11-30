@@ -1,5 +1,6 @@
-mod restful;
 mod driver;
+mod restful;
+mod tag;
 
 use restful::REST;
 
@@ -11,5 +12,4 @@ fn main() {
     } else {
         println!("Error: {:?}", x);
     }
-
 }

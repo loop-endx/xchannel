@@ -1,16 +1,19 @@
+use std::io::Error;
+
 pub struct Tag<T> {
     name: String,
     address: T,
-    value: Value,
-    description: String,
-}
-
-pub enum Endian {
-    Big,
-    Little,
+    value: Option<Result<Value, Error>>,
+    description: Option<String>,
 }
 
 pub enum Value {
+    Base(BaseValue),
+    Array(Vec<BaseValue>),
+    Struct(Vec<BaseValue>),
+}
+
+pub enum BaseValue {
     BIT(u8),
     BOOL(bool),
     UINT8(u8),
@@ -27,5 +30,4 @@ pub enum Value {
     DOUBLE(f64),
     LWORD(u64),
     STRING(String),
-    BYTES(Vec<u8>),
 }

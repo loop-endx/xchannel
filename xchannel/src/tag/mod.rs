@@ -1,16 +1,15 @@
-use std::io::Error;
-
-pub struct Tag<T> {
-    name: String,
-    address: T,
-    value: Option<Result<Value, Error>>,
-    description: Option<String>,
+pub struct Tag {
+    pub name: String,
+    pub value: Value,
+    pub address: String,
+    pub description: Option<String>,
 }
 
 pub enum Value {
     Base(BaseValue),
     Array(Vec<BaseValue>),
     Struct(Vec<BaseValue>),
+    Series(Vec<BaseValue>),
 }
 
 pub enum BaseValue {
@@ -29,5 +28,7 @@ pub enum BaseValue {
     INT64(i64),
     DOUBLE(f64),
     LWORD(u64),
-    STRING(String),
+    ERROR(u64),
+    STRING(u16, Option<String>),
+    BYTES(u16, Option<Vec<u8>>),
 }

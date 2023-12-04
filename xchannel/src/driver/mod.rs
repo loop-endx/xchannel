@@ -27,25 +27,24 @@ impl<'a> Serialize for DriverInfo<'a> {
     }
 }
 
-struct Context<T, S> {
+struct Context<T> {
     context: T,
-    tags: Vec<Tag<S>>,
+    tags: Vec<Tag>,
 }
 
 #[async_trait]
-pub trait Driver<S> {
+pub trait Driver {
     type Setting;
-    type Address;
     type Context;
 
     fn new() -> Self;
     fn info() -> DriverInfo<'static>;
-    fn validate(tags: Vec<Tag<S>>) -> Result<(), Error>;
+    fn validate(tags: Vec<Tag>) -> Result<(), Error>;
 
     async fn setting(&self, setting: Self::Setting) -> Result<(), Error>;
     async fn start(&self) -> Result<(), Error>;
     async fn stop(&self) -> Result<(), Error>;
 
-    async fn scan(&self, &mut context: Self::Context) -> Result<Vec<Tag<S>>, Error>;
+    async fn scan(&self, &mut context: Self::Context) -> Result<Vec<Tag>, Error>;
     async fn write(&self, &context: Self::Context) -> Result<(), Error>;
 }

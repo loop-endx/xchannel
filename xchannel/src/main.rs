@@ -1,4 +1,5 @@
 mod driver;
+mod error;
 mod restful;
 mod tag;
 

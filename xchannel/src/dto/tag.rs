@@ -47,7 +47,7 @@ impl Tag {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tag::BaseValue;
+    use crate::module::tag::BaseValue;
 
     #[test]
     fn test_encode_tag() {

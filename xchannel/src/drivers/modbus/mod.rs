@@ -299,9 +299,9 @@ impl TryFrom<&Tag> for Address {
 #[cfg(test)]
 mod tests {
     use super::{Address, Area};
-    use crate::drivers::tag::Tag;
     use crate::error::*;
-    use crate::tag::{BaseValue, Value};
+    use crate::module::driver::tag::Tag;
+    use crate::module::tag::{BaseValue, Value};
 
     fn tag_check(value: Value, str_address: &str, is_ok: bool, check_address: Option<Address>) {
         let tag = &Tag {
@@ -573,7 +573,10 @@ mod tests {
             length: 10,
         };
         tag_check(
-            Value::Base(BaseValue::STRING(0, None)),
+            Value::Base(BaseValue::STRING {
+                length: 0,
+                str: None,
+            }),
             "1.31.10",
             true,
             Some(address),
@@ -588,7 +591,10 @@ mod tests {
             length: 10,
         };
         tag_check(
-            Value::Base(BaseValue::BYTES(0, None)),
+            Value::Base(BaseValue::BYTES {
+                length: 0,
+                byte: None,
+            }),
             "1.31.10",
             true,
             Some(address),
@@ -766,7 +772,10 @@ mod tests {
             length: 10,
         };
         tag_check(
-            Value::Base(BaseValue::STRING(0, None)),
+            Value::Base(BaseValue::STRING {
+                length: 0,
+                str: None,
+            }),
             "1.41.10",
             true,
             Some(address),
@@ -781,7 +790,10 @@ mod tests {
             length: 10,
         };
         tag_check(
-            Value::Base(BaseValue::BYTES(0, None)),
+            Value::Base(BaseValue::BYTES {
+                length: 0,
+                byte: None,
+            }),
             "1.41.10",
             true,
             Some(address),

@@ -3,7 +3,7 @@ use std::fmt::Display;
 mod frame;
 pub mod tcp;
 
-const MODBUS_MAX_PDU_LEN: usize = 253;
+const _MODBUS_MAX_PDU_LEN: usize = 253;
 
 type Quantity = u16;
 type Address = u16;

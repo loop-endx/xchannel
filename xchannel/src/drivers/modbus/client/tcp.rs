@@ -25,7 +25,7 @@ impl<T> AsyncTcpClient<T>
 where
     T: AsyncRead + AsyncWrite + Unpin,
 {
-    pub fn new(transport: T) -> Self {
+    pub fn _new(transport: T) -> Self {
         AsyncTcpClient {
             framed: Framed::new(transport, ClientCodec::default()),
             transaction_id: AtomicU16::new(0),

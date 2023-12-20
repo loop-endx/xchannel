@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+use crate::dto::device::DeviceInfo;
 use crate::error::{XError, XErrorKind, XResult};
 use crate::module::driver::{Driver, DriverInfo};
 
@@ -45,6 +46,18 @@ impl DeviceMgr {
         let d = self.drivers.lock().unwrap();
 
         d.iter().map(|(_, d)| d.info()).collect()
+    }
+
+    pub fn get_device(&self) -> Vec<DeviceInfo> {
+        let d = self.devices.lock().unwrap();
+
+        d.iter()
+            .map(|(name, d)| DeviceInfo {
+                name: name.to_string(),
+                driver: d.info().name,
+                count: 1,
+            })
+            .collect()
     }
 
     pub fn add_device(&self, device_name: &str, driver_name: &str) -> XResult<()> {

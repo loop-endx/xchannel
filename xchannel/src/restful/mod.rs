@@ -24,7 +24,7 @@ impl REST {
         Ok(REST { host })
     }
 
-    fn with_drivers(
+    fn with_device_mgr(
         device_mgr: Arc<DeviceMgr>,
     ) -> impl Filter<Extract = (Arc<DeviceMgr>,), Error = std::convert::Infallible> + Clone {
         warp::any().map(move || device_mgr.clone())
@@ -46,28 +46,41 @@ impl REST {
                 .and(warp::fs::dir("home"));
 
             let get_drivers = warp::get()
-                .and(warp::path("api"))
-                .and(warp::path("driver"))
-                .and(Self::with_drivers(device_mgr.clone()))
+                .and(warp::path!("api" / "driver"))
+                .and(Self::with_device_mgr(device_mgr.clone()))
                 .and_then(handler::get_drivers);
 
-            let test_err = warp::get()
-                .and(warp::path("test"))
-                .and(Self::with_drivers(device_mgr.clone()))
-                .and_then(handler::test_error);
+            let get_devices = warp::get()
+                .and(warp::path!("api" / "device"))
+                .and(Self::with_device_mgr(device_mgr.clone()))
+                .and_then(handler::get_devices);
 
-            let add_tags = warp::post()
-                .and(warp::path("api"))
-                .and(warp::path("tag"))
+            let add_device = warp::post()
+                .and(warp::path!("api" / "device"))
                 .and(warp::body::json())
-                .and(warp::any().map(move || tags_mgr.clone()))
-                .and_then(handler::add_tags);
+                .and(Self::with_device_mgr(device_mgr.clone()))
+                .and_then(handler::add_device);
+
+            let del_device = warp::delete()
+                .and(warp::path!("api" / "device"))
+                .and(warp::path::param())
+                .and(Self::with_device_mgr(device_mgr.clone()))
+                .and_then(handler::del_device);
+
+            //let add_tags = warp::post()
+            //.and(warp::path("api"))
+            //.and(warp::path("tag"))
+            //.and(warp::body::json())
+            //.and(warp::any().map(move || tags_mgr.clone()))
+            //.and_then(handler::add_tags);
 
             let routes = redirect_dashboard
                 .or(dashboard)
                 .or(get_drivers)
-                .or(test_err)
-                .or(add_tags)
+                .or(get_devices)
+                .or(add_device)
+                .or(del_device)
+                // .or(add_tags)
                 .recover(rejection::handle_rejection);
             warp::serve(routes).run(self.host).await;
         })

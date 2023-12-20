@@ -17,7 +17,7 @@ struct _Context<T> {
     tags: Vec<tag::Tag>,
 }
 
-pub struct TestContext {}
+//pub struct TestContext {}
 
 #[async_trait]
 pub trait Driver: Default {

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tokio;
 use warp::{http::Uri, Filter};
 
-use crate::manager::{driver::Drivers, tag::Tags};
+use crate::manager::{device::DeviceMgr, tag::Tags};
 
 mod handler;
 mod rejection;
@@ -25,12 +25,12 @@ impl REST {
     }
 
     fn with_drivers(
-        drivers: Arc<Drivers>,
-    ) -> impl Filter<Extract = (Arc<Drivers>,), Error = std::convert::Infallible> + Clone {
-        warp::any().map(move || drivers.clone())
+        device_mgr: Arc<DeviceMgr>,
+    ) -> impl Filter<Extract = (Arc<DeviceMgr>,), Error = std::convert::Infallible> + Clone {
+        warp::any().map(move || device_mgr.clone())
     }
 
-    pub fn serve(&self, drivers: Arc<Drivers>, tags_mgr: Arc<Tags>) -> () {
+    pub fn serve(&self, device_mgr: Arc<DeviceMgr>, tags_mgr: Arc<Tags>) -> () {
         let rt = tokio::runtime::Builder::new_multi_thread()
             .worker_threads(4)
             .enable_all()
@@ -48,12 +48,12 @@ impl REST {
             let get_drivers = warp::get()
                 .and(warp::path("api"))
                 .and(warp::path("driver"))
-                .and(Self::with_drivers(drivers.clone()))
+                .and(Self::with_drivers(device_mgr.clone()))
                 .and_then(handler::get_drivers);
 
             let test_err = warp::get()
                 .and(warp::path("test"))
-                .and(Self::with_drivers(drivers.clone()))
+                .and(Self::with_drivers(device_mgr.clone()))
                 .and_then(handler::test_error);
 
             let add_tags = warp::post()

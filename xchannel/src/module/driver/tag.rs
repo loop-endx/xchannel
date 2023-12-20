@@ -1,7 +1,7 @@
-use crate::error::{TagError, TagErrorKind, XError, XResult};
+use crate::error::{XError, XErrorKind, XResult};
 
-use super::super::tag::Value;
 use super::super::tag;
+use super::super::tag::Value;
 
 #[derive(Debug, Clone)]
 pub struct Tag {
@@ -21,7 +21,7 @@ impl TryFrom<tag::Tag> for Tag {
                 address,
             })
         } else {
-            Err(TagError::new(TagErrorKind::Invalid, "Tag address is empty"))
+            Err(XError::new(XErrorKind::TagError, "Tag address is empty"))
         }
     }
 }

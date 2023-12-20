@@ -38,18 +38,13 @@ impl Tags {
                     if driver.get(parent).is_none() {
                         if let Some(t) = h_tag.get(&parent[..]) {
                             if t.value.is_base() {
-                                return Err(TagError::new_with_index(
-                                    TagErrorKind::Invalid,
+                                return Err(XError::tag(
                                     i as i32 + 1,
                                     "Parent tag should be array or struct",
                                 ));
                             }
                         } else {
-                            return Err(TagError::new_with_index(
-                                TagErrorKind::Invalid,
-                                i as i32 + 1,
-                                "Parent tag not found",
-                            ));
+                            return Err(XError::tag(i as i32 + 1, "Parent tag not found"));
                         }
                     }
                 }
@@ -60,7 +55,7 @@ impl Tags {
             }
             Ok(())
         } else {
-            Err(DriverError::new(DriverErrorKind::NotFoundDriver, &driver))
+            Err(XError::new(XErrorKind::DriverError, "driver not found"))
         }
     }
 }

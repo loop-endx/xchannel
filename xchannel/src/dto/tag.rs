@@ -20,18 +20,13 @@ impl Tag {
                 Base(_) => {
                     if let Some(parent) = &tag.parent {
                         if *parent == tag.name {
-                            return Err(TagError::new_with_index(
-                                TagErrorKind::Invalid,
-                                i as i32 + 1,
-                                "Parent can't be self",
-                            ));
+                            return Err(XError::tag(i as i32 + 1, "Parent can't be self"));
                         }
                     }
                 }
                 Array(_) | Struct(_) => {
                     if tag.parent.is_some() {
-                        return Err(TagError::new_with_index(
-                            TagErrorKind::Invalid,
+                        return Err(XError::tag(
                             i as i32 + 1,
                             "Array or Struct shouldn't have parent",
                         ));

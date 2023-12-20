@@ -12,14 +12,16 @@ pub struct DriverInfo {
     pub version: String,
 }
 
-//struct _Context<T> {
-//context: T,
-//tags: Vec<tag::Tag>,
-//}
+struct _Context<T> {
+    context: T,
+    tags: Vec<tag::Tag>,
+}
+
+pub struct TestContext {}
 
 #[async_trait]
-pub trait Driver {
-    //    type Context;
+pub trait Driver: Default {
+    //type Context;
 
     fn new(setting: &str) -> Self;
     fn info() -> DriverInfo;

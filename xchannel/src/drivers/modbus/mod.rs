@@ -27,10 +27,7 @@ impl TryFrom<&str> for Area {
             "1" => Ok(DiscreteInput),
             "3" => Ok(InputRegister),
             "4" => Ok(HoldingRegister),
-            _ => Err(TagError::new(
-                TagErrorKind::InvalidAddress,
-                "invalid area code",
-            )),
+            _ => Err(XError::new(XErrorKind::TagError, "invalid area code")),
         }
     }
 }
@@ -54,8 +51,8 @@ impl Address {
         str_address: Vec<&str>,
     ) -> XResult<Address> {
         if !tag.value.is_base() {
-            return Err(TagError::new(
-                TagErrorKind::UnsupportType,
+            return Err(XError::new(
+                XErrorKind::TagError,
                 "invalid value type for Modbus",
             ));
         }
@@ -75,21 +72,19 @@ impl Address {
                 }),
                 Area::InputRegister | Area::HoldingRegister => {
                     if str_address.len() != 3 {
-                        return Err(TagError::new(
-                            TagErrorKind::InvalidAddress,
+                        return Err(XError::new(
+                            XErrorKind::TagError,
                             "address must be in the format: <slave>.<address>.<bit>",
                         ));
                     }
                     let bit = str_address[2]
                         .get(0..1)
-                        .ok_or(TagError::new(
-                            TagErrorKind::InvalidAddress,
+                        .ok_or(XError::new(
+                            XErrorKind::TagError,
                             "address must be in the format: <slave>.<address>.<bit>",
                         ))?
                         .parse::<u8>()
-                        .map_err(|_| {
-                            TagError::new(TagErrorKind::InvalidAddress, "need bit offset")
-                        })?;
+                        .map_err(|_| XError::new(XErrorKind::TagError, "need bit offset"))?;
 
                     Ok(Address {
                         slave,
@@ -102,8 +97,8 @@ impl Address {
                 }
             },
             BaseValue::UINT16(_) | BaseValue::INT16(_) | BaseValue::WORD(_) => match area {
-                Area::Coil | Area::DiscreteInput => Err(TagError::new(
-                    TagErrorKind::UnsupportType,
+                Area::Coil | Area::DiscreteInput => Err(XError::new(
+                    XErrorKind::TagError,
                     "unsupport INT16/UINT16/WORD for Coil/DiscreteInput",
                 )),
                 Area::HoldingRegister | Area::InputRegister => Ok(Address {
@@ -119,8 +114,8 @@ impl Address {
             | BaseValue::INT32(_)
             | BaseValue::FLOAT(_)
             | BaseValue::DWORD(_) => match area {
-                Area::Coil | Area::DiscreteInput => Err(TagError::new(
-                    TagErrorKind::UnsupportType,
+                Area::Coil | Area::DiscreteInput => Err(XError::new(
+                    XErrorKind::TagError,
                     "unsupport INT32/UINT32/FLOAT/DWORD for Coil/DiscreteInput",
                 )),
                 Area::HoldingRegister | Area::InputRegister => Ok(Address {
@@ -136,8 +131,8 @@ impl Address {
             | BaseValue::INT64(_)
             | BaseValue::DOUBLE(_)
             | BaseValue::LWORD(_) => match area {
-                Area::Coil | Area::DiscreteInput => Err(TagError::new(
-                    TagErrorKind::UnsupportType,
+                Area::Coil | Area::DiscreteInput => Err(XError::new(
+                    XErrorKind::TagError,
                     "unsupport INT64/UINT64/DOUBLE/LWORD for Coil/DiscreteInput",
                 )),
                 Area::HoldingRegister | Area::InputRegister => Ok(Address {
@@ -151,27 +146,25 @@ impl Address {
             },
             BaseValue::STRING { .. } => {
                 if area == Area::Coil || area == Area::DiscreteInput {
-                    return Err(TagError::new(
-                        TagErrorKind::UnsupportType,
+                    return Err(XError::new(
+                        XErrorKind::TagError,
                         "unsupport STRING for Coil/DiscreteInput",
                     ));
                 }
                 if str_address.len() != 3 {
-                    return Err(TagError::new(
-                        TagErrorKind::InvalidAddress,
+                    return Err(XError::new(
+                        XErrorKind::TagError,
                         "address must be in the format: <slave>.<address>.<length><H/L>",
                     ));
                 }
                 let length = str_address[2]
                     .get(0..)
-                    .ok_or(TagError::new(
-                        TagErrorKind::InvalidAddress,
+                    .ok_or(XError::new(
+                        XErrorKind::TagError,
                         "address must be in the format: <slave>.<address>.<length><H/L>",
                     ))?
                     .parse::<u16>()
-                    .map_err(|_| {
-                        TagError::new(TagErrorKind::InvalidAddress, "need string length")
-                    })?;
+                    .map_err(|_| XError::new(XErrorKind::TagError, "need string length"))?;
 
                 Ok(Address {
                     slave,
@@ -184,28 +177,26 @@ impl Address {
             }
             BaseValue::BYTES { .. } => {
                 if area == Area::Coil || area == Area::DiscreteInput {
-                    return Err(TagError::new(
-                        TagErrorKind::UnsupportType,
+                    return Err(XError::new(
+                        XErrorKind::TagError,
                         "unsupport BYTES for Coil/DiscreteInput",
                     ));
                 }
                 if str_address.len() != 3 {
-                    return Err(TagError::new(
-                        TagErrorKind::InvalidAddress,
+                    return Err(XError::new(
+                        XErrorKind::TagError,
                         "address must be in the format: <slave>.<address>.<length>",
                     ));
                 }
 
                 let length = str_address[2]
                     .get(0..)
-                    .ok_or(TagError::new(
-                        TagErrorKind::InvalidAddress,
+                    .ok_or(XError::new(
+                        XErrorKind::TagError,
                         "address must be in the format: <slave>.<address>.<length>",
                     ))?
                     .parse::<u16>()
-                    .map_err(|_| {
-                        TagError::new(TagErrorKind::InvalidAddress, "need bytes length")
-                    })?;
+                    .map_err(|_| XError::new(XErrorKind::TagError, "need bytes length"))?;
 
                 Ok(Address {
                     slave,
@@ -216,8 +207,8 @@ impl Address {
                     length,
                 })
             }
-            _ => Err(TagError::new(
-                TagErrorKind::UnsupportType,
+            _ => Err(XError::new(
+                XErrorKind::TagError,
                 "invalid value type for Modbus",
             )),
         }
@@ -233,54 +224,51 @@ impl TryFrom<&Tag> for Address {
 
     fn try_from(tag: &Tag) -> XResult<Self> {
         if !tag.address.is_ascii() {
-            return Err(TagError::new(
-                TagErrorKind::InvalidAddress,
-                "address must be ASCII",
-            ));
+            return Err(XError::new(XErrorKind::TagError, "address must be ASCII"));
         }
 
         let address: Vec<&str> = tag.address.split('.').collect();
         if address.len() != 2 && address.len() != 3 {
-            return Err(TagError::new(
-                TagErrorKind::InvalidAddress,
+            return Err(XError::new(
+                XErrorKind::TagError,
                 "address must be in the format: <slave>.<address>.<length/bit><H/L>",
             ));
         }
 
         let slave = address[0]
             .parse::<u8>()
-            .map_err(|_| TagError::new(TagErrorKind::InvalidAddress, "invalid slave id"))?;
+            .map_err(|_| XError::new(XErrorKind::TagError, "invalid slave id"))?;
 
         let info = if let Some("H") = address[1].get(0..1) {
             let area = address[1]
                 .get(1..2)
-                .ok_or(TagError::new(
-                    TagErrorKind::InvalidAddress,
+                .ok_or(XError::new(
+                    XErrorKind::TagError,
                     "address must be in the format: <slave>.<address>.<length/bit><H/L>",
                 ))?
                 .try_into()?;
 
             let reg_address = u32::from_str_radix(address[1].get(2..).unwrap(), 16)
-                .map_err(|_| TagError::new(TagErrorKind::InvalidAddress, "invalid hex address"))?;
+                .map_err(|_| XError::new(XErrorKind::TagError, "invalid hex address"))?;
 
             (area, reg_address)
         } else {
             let area = address[1]
                 .get(0..1)
-                .ok_or(TagError::new(
-                    TagErrorKind::InvalidAddress,
+                .ok_or(XError::new(
+                    XErrorKind::TagError,
                     "address must be in the format: <slave>.<address>.<length/bit><H/L>",
                 ))?
                 .try_into()?;
 
             let reg_address = address[1]
                 .get(1..)
-                .ok_or(TagError::new(
-                    TagErrorKind::InvalidAddress,
+                .ok_or(XError::new(
+                    XErrorKind::TagError,
                     "address must be in the format: <slave>.<address>.<length/bit><H/L>",
                 ))?
                 .parse::<u32>()
-                .map_err(|_| TagError::new(TagErrorKind::InvalidAddress, "invalid address"))?;
+                .map_err(|_| XError::new(XErrorKind::TagError, "invalid address"))?;
 
             (area, reg_address)
         };
@@ -288,8 +276,8 @@ impl TryFrom<&Tag> for Address {
         if info.1 > 0 && info.1 <= 0x10000 {
             Address::to(tag, slave, info.0, info.1, address)
         } else {
-            Err(TagError::new(
-                TagErrorKind::InvalidAddress,
+            Err(XError::new(
+                XErrorKind::TagError,
                 "address must be in the range: 1 - 65536",
             ))
         }

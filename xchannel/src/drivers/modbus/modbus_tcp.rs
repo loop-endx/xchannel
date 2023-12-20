@@ -16,6 +16,15 @@ pub struct ModbusTcp {
     pub context: Option<ModbusTcpContext>,
 }
 
+impl Default for ModbusTcp {
+    fn default() -> Self {
+        ModbusTcp {
+            setting: "".to_string(),
+            context: None,
+        }
+    }
+}
+
 impl Driver for ModbusTcp {
     //type Setting = ModbusTcpSetting;
     //type Context = ModbusTcpContext;

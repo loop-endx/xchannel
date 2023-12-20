@@ -55,8 +55,8 @@ impl<'a> TryFrom<&'a Value> for &'a BaseValue {
     fn try_from(value: &'a Value) -> XResult<Self> {
         match value {
             Value::Base(base_value) => Ok(base_value),
-            _ => Err(TagError::new(
-                TagErrorKind::UnsupportType,
+            _ => Err(XError::new( 
+                XErrorKind::TagError,
                 "Value is not base type",
             )),
         }

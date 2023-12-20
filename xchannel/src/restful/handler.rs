@@ -4,18 +4,19 @@ use warp::{http::StatusCode, reject, Rejection, Reply};
 
 use crate::dto;
 use crate::error::*;
-use crate::manager::{driver::Drivers, tag::Tags};
+use crate::manager::device::DeviceMgr;
+use crate::manager::tag::Tags;
 
-pub async fn get_drivers(drivers: Arc<Drivers>) -> Result<impl Reply, Rejection> {
-    Ok(warp::reply::json(&drivers.get_drivers()))
+pub async fn get_drivers(device_mgr: Arc<DeviceMgr>) -> Result<impl Reply, Rejection> {
+    Ok(warp::reply::json(&device_mgr.get_driver_info()))
 }
 
-pub async fn test_error(drivers: Arc<Drivers>) -> Result<impl Reply, Rejection> {
+pub async fn test_error(device_mgr: Arc<DeviceMgr>) -> Result<impl Reply, Rejection> {
     let a: Result<i32, String> = Err("h1".to_string());
 
-    a.map_err(|_| reject::custom(TagError::new(TagErrorKind::Invalid, "llllll")))?;
+    a.map_err(|_| reject::custom(XError::new(XErrorKind::TagError, "llllll")))?;
 
-    Ok(warp::reply::json(&drivers.get_drivers()))
+    Ok(warp::reply::json(&device_mgr.get_driver_info()))
 }
 
 pub async fn add_tags(

@@ -2,14 +2,18 @@ use std::sync::Arc;
 
 use warp::{Rejection, Reply};
 
-use crate::{dto::device::AddDevice, manager::device::DeviceMgr};
+use crate::driver::mgr::DeviceMgr;
+use crate::driver::dto::AddDevice;
 
 pub async fn get_drivers(device_mgr: Arc<DeviceMgr>) -> Result<impl Reply, Rejection> {
-    Ok(warp::reply::json(&device_mgr.get_driver_info()))
+    Ok(warp::reply::json(&device_mgr.get_drivers()))
 }
 
-pub async fn get_devices(device_mgr: Arc<DeviceMgr>) -> Result<impl Reply, Rejection> {
-    Ok(warp::reply::json(&device_mgr.get_device()))
+pub async fn get_devices(
+    driver: Option<String>,
+    device_mgr: Arc<DeviceMgr>,
+) -> Result<impl Reply, Rejection> {
+    Ok(warp::reply::json(&device_mgr.get_devices(driver)))
 }
 
 pub async fn del_device(name: String, device_mgr: Arc<DeviceMgr>) -> Result<impl Reply, Rejection> {

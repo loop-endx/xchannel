@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tokio;
 use warp::{http::Uri, Filter};
 
-use crate::manager::{device::DeviceMgr, tag::Tags};
+use crate::driver::mgr::DeviceMgr;
 
 mod handler;
 mod rejection;
@@ -30,7 +30,7 @@ impl REST {
         warp::any().map(move || device_mgr.clone())
     }
 
-    pub fn serve(&self, device_mgr: Arc<DeviceMgr>, tags_mgr: Arc<Tags>) -> () {
+    pub fn serve(&self, device_mgr: Arc<DeviceMgr>) -> () {
         let rt = tokio::runtime::Builder::new_multi_thread()
             .worker_threads(4)
             .enable_all()
@@ -52,6 +52,7 @@ impl REST {
 
             let get_devices = warp::get()
                 .and(warp::path!("api" / "device"))
+                .and(warp::query::<Option<String>>())
                 .and(Self::with_device_mgr(device_mgr.clone()))
                 .and_then(handler::get_devices);
 
@@ -67,6 +68,12 @@ impl REST {
                 .and(Self::with_device_mgr(device_mgr.clone()))
                 .and_then(handler::del_device);
 
+            //let add_tag_table = warp::post()
+            //.and(warp::path!("api" / "device" / "table"))
+            //.and(warp::body::json())
+            //.and(Self::with_device_mgr(device_mgr.clone()))
+            //.and_then(handler::add_device);
+
             //let add_tags = warp::post()
             //.and(warp::path("api"))
             //.and(warp::path("tag"))
@@ -80,6 +87,7 @@ impl REST {
                 .or(get_devices)
                 .or(add_device)
                 .or(del_device)
+                //.or(add_tag_table)
                 // .or(add_tags)
                 .recover(rejection::handle_rejection);
             warp::serve(routes).run(self.host).await;

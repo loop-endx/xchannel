@@ -1,8 +1,6 @@
-use crate::module::driver::{tag::Tag, Driver, DriverInfo};
+use crate::driver::{Driver, DriverInfo};
 
 use crate::error::XResult;
-
-use super::super::modbus::Address;
 
 pub struct _ModbusTcpSetting {
     pub host: String,
@@ -25,18 +23,17 @@ impl Default for ModbusTcp {
     }
 }
 
-impl Driver for ModbusTcp {
-    //type Setting = ModbusTcpSetting;
-    //type Context = ModbusTcpContext;
-
-    fn new(setting: &str) -> Self {
+impl ModbusTcp {
+    pub fn new(setting: Option<&str>) -> impl Driver {
         ModbusTcp {
-            setting: setting.to_string(),
+            setting: setting.unwrap_or("").to_string(),
             context: None,
         }
     }
+}
 
-    fn info() -> DriverInfo {
+impl Driver for ModbusTcp {
+    fn info(&self) -> DriverInfo {
         DriverInfo {
             name: "Modbus TCP".to_string(),
             description: "Modbus TCP description".to_string(),
@@ -44,12 +41,12 @@ impl Driver for ModbusTcp {
         }
     }
 
-    fn validate(tags: Vec<Tag>) -> XResult<()> {
-        for (i, tag) in tags.iter().enumerate() {
-            if let Err(err) = TryInto::<Address>::try_into(tag) {
-                return Err(err.with_index(i as i32 + 1));
-            }
-        }
+    fn validate(&self, _tags: Vec<crate::tag::Tag>) -> XResult<()> {
+        //for (i, tag) in tags.iter().enumerate() {
+        //if let Err(err::XError) = tag.try_into() {
+        //return Err(err.with_index(i as i32 + 1));
+        //}
+        //}
 
         Ok(())
     }

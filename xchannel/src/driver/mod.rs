@@ -20,5 +20,5 @@ pub struct DriverInfo {
 pub trait Driver {
     fn info(&self) -> DriverInfo;
     fn validate(&self, tags: Vec<Tag>) -> XResult<()>;
-    // fn setting(&self) -> XResult<()>;
+    fn setting(&self, parameters: &[dto::Parameter]) -> XResult<()>;
 }

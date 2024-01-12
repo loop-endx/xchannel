@@ -2,31 +2,34 @@ use crate::driver::{Driver, DriverInfo};
 
 use crate::error::XResult;
 
-pub struct _ModbusTcpSetting {
+pub struct Setting {
     pub host: String,
     pub port: u16,
+    pub timeout: u16,
 }
+
+use crate::driver::dto;
 
 pub struct ModbusTcpContext {}
 
 pub struct ModbusTcp {
-    pub setting: String,
+    pub setting: Option<Setting>,
     pub context: Option<ModbusTcpContext>,
 }
 
 impl Default for ModbusTcp {
     fn default() -> Self {
         ModbusTcp {
-            setting: "".to_string(),
+            setting: None,
             context: None,
         }
     }
 }
 
 impl ModbusTcp {
-    pub fn new(setting: Option<&str>) -> impl Driver {
+    pub fn new() -> impl Driver {
         ModbusTcp {
-            setting: setting.unwrap_or("").to_string(),
+            setting: None,
             context: None,
         }
     }
@@ -48,6 +51,10 @@ impl Driver for ModbusTcp {
         //}
         //}
 
+        Ok(())
+    }
+
+    fn setting(&self, _parameters: &[dto::Parameter]) -> XResult<()> {
         Ok(())
     }
 }

@@ -3,7 +3,7 @@ use std::sync::Mutex;
 
 use crate::error::*;
 
-use super::{dto::Tag as DtoTag, r#type::Value, Tag};
+use super::{dto::Tag as DtoTag, Tag};
 
 pub struct TagTable<T> {
     name: String,
@@ -30,17 +30,22 @@ impl<T: Clone> TagTable<T> {
         )
     }
 
-    pub fn get_tag(&self, limit: Option<u16>) -> Vec<Tag> {
+    pub fn get_tag(&self, limit: Option<u16>) -> Vec<DtoTag> {
         let t = self.tags.lock().unwrap();
-        let tags = t.iter();
 
-        if let Some(limit) = limit {
-            tags.take(limit as usize)
-                .map(|(_, tag)| tag.clone())
-                .collect()
-        } else {
-            tags.map(|(_, tag)| tag.clone()).collect()
+        let mut tags = Vec::new();
+
+        for tag in t.values() {
+            if let Some(limit) = limit {
+                if tags.len() >= limit as usize {
+                    break;
+                }
+            }
+
+            tags.push(tag.into());
         }
+
+        tags
     }
 
     pub fn add(&self, tags: &[DtoTag]) -> XResult<()> {
@@ -48,9 +53,9 @@ impl<T: Clone> TagTable<T> {
 
         for (i, tag) in tags.iter().enumerate() {
             if t.contains_key(&tag.name) {
-                return Err(XError::tag(
+                return Err(XError::TagError(
                     i as i32 + 1,
-                    &format!("conflict name {}", tag.name),
+                    format!("conflict name {}", tag.name),
                 ));
             }
 
@@ -71,33 +76,33 @@ impl<T: Clone> TagTable<T> {
         Ok(())
     }
 
-    pub fn update(&self, tags: &[DtoTag]) -> XResult<()> {
-        let mut t = self.tags.lock().unwrap();
+    //pub fn _update(&self, tags: &[DtoTag]) -> XResult<()> {
+    //let mut t = self.tags.lock().unwrap();
 
-        for (i, tag) in tags.iter().enumerate() {
-            if let Some(t) = t.get_mut(&tag.name) {
-                t.update(tag)?;
-            } else {
-                return Err(XError::tag(
-                    i as i32 + 1,
-                    &format!("tag {} not found", tag.name),
-                ));
-            }
-        }
+    //for (i, tag) in tags.iter().enumerate() {
+    //if let Some(t) = t.get_mut(&tag.name) {
+    //t.update(tag)?;
+    //} else {
+    //return Err(XError::TagError(
+    //i as i32 + 1,
+    //format!("tag {} not found", tag.name),
+    //));
+    //}
+    //}
 
-        Ok(())
-    }
+    //Ok(())
+    //}
 
-    pub fn update_value(&self, tv: &[(&str, Value)]) -> XResult<()> {
-        let mut t = self.tags.lock().unwrap();
+    //pub fn _update_value(&self, tv: &[(&str, Value)]) -> XResult<()> {
+    //let mut t = self.tags.lock().unwrap();
 
-        for (name, value) in tv {
-            if let Some(t) = t.get_mut(*name) {
-                t.update_value(value.clone())?;
-            } else {
-                return Err(XError::tag(0, &format!("tag {} not found", name)));
-            }
-        }
-        Ok(())
-    }
+    //for (name, value) in tv {
+    //if let Some(t) = t.get_mut(*name) {
+    //t.update_value(value.clone())?;
+    //} else {
+    //return Err(XError::TagError(0, format!("tag {} not found", name)));
+    //}
+    //}
+    //Ok(())
+    //}
 }

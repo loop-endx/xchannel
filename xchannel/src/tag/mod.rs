@@ -39,36 +39,36 @@ impl Tag {
         })
     }
 
-    pub fn update(&mut self, tag: &dto::Tag) -> XResult<()> {
-        let init_v = tag.dtype.init();
+    //pub fn update(&mut self, tag: &dto::Tag) -> XResult<()> {
+    //let init_v = tag.dtype.init();
 
-        if let Some(v) = &tag.value {
-            if init_v.r#type() != v.r#type() {
-                return Err(crate::error::XError::new(
-                    crate::error::XErrorKind::TagError,
-                    "Tag value type mismatch",
-                ));
-            }
-        }
+    //if let Some(v) = &tag.value {
+    //if init_v.r#type() != v.r#type() {
+    //return Err(crate::error::XError::new(
+    //crate::error::XErrorKind::TagError,
+    //"Tag value type mismatch",
+    //));
+    //}
+    //}
 
-        self.value = tag.value.clone().unwrap_or(init_v);
-        self.dtype = tag.dtype.clone();
-        self.address = tag.address.clone();
-        self.description = tag.description.clone();
+    //self.value = tag.value.clone().unwrap_or(init_v);
+    //self.dtype = tag.dtype.clone();
+    //self.address = tag.address.clone();
+    //self.description = tag.description.clone();
 
-        Ok(())
-    }
+    //Ok(())
+    //}
 
-    pub fn update_value(&mut self, value: Value) -> XResult<()> {
-        if self.value.r#type() != value.r#type() {
-            return Err(crate::error::XError::new(
-                crate::error::XErrorKind::TagError,
-                "Tag value type mismatch",
-            ));
-        }
+    //pub fn update_value(&mut self, value: Value) -> XResult<()> {
+    //if self.value.r#type() != value.r#type() {
+    //return Err(crate::error::XError::new(
+    //crate::error::XErrorKind::TagError,
+    //"Tag value type mismatch",
+    //));
+    //}
 
-        self.value = value;
+    //self.value = value;
 
-        Ok(())
-    }
+    //Ok(())
+    //}
 }

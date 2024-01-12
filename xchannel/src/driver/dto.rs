@@ -24,12 +24,6 @@ pub struct SerialClient {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Client {
-    TCP(TCPClient),
-    Serial(SerialClient),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Parameter {
     pub name: String,
     pub value: String,
@@ -39,6 +33,34 @@ pub struct Parameter {
 pub struct AddDevice {
     pub name: String,
     pub driver: String,
-    pub target: Option<Client>,
     pub parameters: Vec<Parameter>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AddTable {
+    pub device: String,
+    pub name: String,
+    pub parameters: Vec<Parameter>,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AddTags {
+    pub device: String,
+    pub table: String,
+    pub tags: Vec<crate::tag::dto::Tag>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DelTags {
+    pub device: String,
+    pub table: String,
+    pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetTables {
+    pub name: String,
+    pub parameters: Vec<Parameter>,
+    pub description: Option<String>,
 }

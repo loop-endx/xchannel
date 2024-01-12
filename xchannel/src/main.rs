@@ -16,7 +16,7 @@ fn main() {
 
     let device_mgr = mgr::DeviceMgr::init();
 
-    let x = REST::new("0.0.0.0", 7789);
+    let x = REST::new("0.0.0.0", 5260);
 
     if let Ok(x) = x {
         x.serve(device_mgr);

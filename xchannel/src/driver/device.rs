@@ -5,20 +5,18 @@ use crate::error::*;
 
 use crate::tag::{dto::Tag as DtoTag, table::TagTable};
 
-use super::Driver;
-use super::Tag;
+use super::dto::Parameter;
+use super::{dto, Driver};
 
 pub struct Device<T> {
-    name: String,
     driver: Box<dyn Driver + Send>,
 
     tables: Mutex<HashMap<String, TagTable<T>>>,
 }
 
 impl<T: Clone> Device<T> {
-    pub fn new(name: String, driver: Box<dyn Driver + Send>) -> Self {
+    pub fn new(driver: Box<dyn Driver + Send>) -> Self {
         Device {
-            name,
             driver,
             tables: Mutex::new(HashMap::new()),
         }
@@ -49,13 +47,20 @@ impl<T: Clone> Device<T> {
         Ok(())
     }
 
-    pub fn get_tables(&self) -> Vec<(String, Option<String>, usize)> {
+    pub fn get_tables(&self) -> Vec<dto::GetTables> {
         let t = self.tables.lock().unwrap();
 
         t.iter()
-            .map(|(name, table)| {
-                let info = table.get_info();
-                (name.clone(), info.1, 0)
+            .map(|(_, table)| {
+                let (name, description, _param) = table.get_info();
+                dto::GetTables {
+                    name,
+                    parameters: vec![Parameter {
+                        name: "param".to_string(),
+                        value: "11".to_string(),
+                    }],
+                    description,
+                }
             })
             .collect()
     }
@@ -73,7 +78,20 @@ impl<T: Clone> Device<T> {
         }
     }
 
-    pub fn get_tags(&self, table: &str, limit: Option<u16>) -> XResult<Vec<Tag>> {
+    pub fn del_tags(&self, table: &str, tags: &[String]) -> XResult<()> {
+        let t = self.tables.lock().unwrap();
+
+        if let Some(table) = t.get(table) {
+            table.del(tags)
+        } else {
+            Err(XError::new(
+                XErrorKind::TagError,
+                &format!("table {} not found", table),
+            ))
+        }
+    }
+
+    pub fn get_tags(&self, table: &str, limit: Option<u16>) -> XResult<Vec<DtoTag>> {
         let t = self.tables.lock().unwrap();
 
         if let Some(table) = t.get(table) {

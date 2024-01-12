@@ -37,3 +37,29 @@ impl TryFrom<&Tag> for MTag {
         }
     }
 }
+
+impl TryFrom<MTag> for Tag {
+    type Error = XError;
+
+    fn try_from(tag: MTag) -> XResult<Tag> {
+        Ok(Tag {
+            name: tag.name,
+            value: Some(tag.value),
+            dtype: tag.dtype,
+            address: tag.address,
+            description: tag.description,
+        })
+    }
+}
+
+impl From<&MTag> for Tag {
+    fn from(tag: &MTag) -> Tag {
+        Tag {
+            name: tag.name.clone(),
+            value: Some(tag.value.clone()),
+            dtype: tag.dtype.clone(),
+            address: tag.address.clone(),
+            description: tag.description.clone(),
+        }
+    }
+}

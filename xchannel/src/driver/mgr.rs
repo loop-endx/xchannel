@@ -44,9 +44,9 @@ impl DeviceMgr {
         Ok(mgr)
     }
 
-    pub async fn load(&self) -> XResult<()> {
+    async fn load(&self) -> XResult<()> {
         let mut devices = self.devices.lock().await;
-        let de = self.db.query::<db::device::Device>("device").await?;
+        let de = self.db.query::<db::device::Device>().await?;
 
         for device in de {
             let d = self.create_device(&device.driver, &device.parameters)?;
@@ -211,14 +211,11 @@ impl DeviceMgr {
         let device = self.create_device(driver_name, parameters)?;
 
         self.db
-            .create(
-                "device",
-                db::device::Device {
-                    name: device_name.to_string(),
-                    driver: driver_name.to_string(),
-                    parameters: parameters.to_vec(),
-                },
-            )
+            .create(db::device::Device {
+                name: device_name.to_string(),
+                driver: driver_name.to_string(),
+                parameters: parameters.to_vec(),
+            })
             .await?;
 
         devices.insert(device_name.to_string(), device);

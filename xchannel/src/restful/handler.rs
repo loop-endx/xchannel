@@ -86,16 +86,3 @@ pub async fn get_tags(
         &device_mgr.get_tags(&device, &table, None).await,
     ))
 }
-
-//pub async fn add_tags(
-//tags: Vec<dto::tag::Tag>,
-//tags_mgr: Arc<Tags>,
-//) -> Result<impl Reply, Rejection> {
-//dto::tag::Tag::check(&tags)?;
-//tags_mgr.add();
-//tags_mgr.insert("modbus".to_string(), tags)?;
-
-////println!("{:?}", tags);
-////Ok(warp::reply::with_status("", StatusCode::CREATED))
-//Ok(StatusCode::CREATED)
-//}

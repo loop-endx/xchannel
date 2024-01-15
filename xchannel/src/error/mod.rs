@@ -14,6 +14,8 @@ pub enum XError {
     ParameterError(String), // 1003
     #[error("DB Error: {0}")]
     DBError(String), // 1101
+    #[error("Other Error: {0}")]
+    IOError(String), // 1201
 }
 
 pub enum XErrorKind {
@@ -22,6 +24,7 @@ pub enum XErrorKind {
     TagError,
     ParameterError,
     DBError,
+    IOError,
 }
 
 impl XError {
@@ -33,6 +36,7 @@ impl XError {
             XErrorKind::TagError => TagError(-1, msg.to_string()),
             XErrorKind::ParameterError => ParameterError(msg.to_string()),
             XErrorKind::DBError => DBError(msg.to_string()),
+            XErrorKind::IOError => IOError(msg.to_string()),
         }
     }
 }
@@ -46,7 +50,7 @@ impl XError {
             TagError(_, _) => 1003,
             ParameterError(_) => 1004,
             DBError(_) => 1101,
-            //Io(_) => 1101,
+            IOError(_) => 1201,
         }
     }
 
@@ -58,6 +62,12 @@ impl XError {
 impl From<surrealdb::Error> for XError {
     fn from(err: surrealdb::Error) -> Self {
         XError::new(XErrorKind::DBError, &err.to_string())
+    }
+}
+
+impl From<std::io::Error> for XError {
+    fn from(err: std::io::Error) -> Self {
+        XError::new(XErrorKind::IOError, &err.to_string())
     }
 }
 

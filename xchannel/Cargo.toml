@@ -16,7 +16,10 @@ futures = "0.3"
 futures-util = "0.3"
 tokio-util = "0.7"
 thiserror = "1.0"
-
+surrealdb = { version = "1.1.0", features = ["kv-rocksdb", "kv-mem"] }
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+tracing-appender = "0.2"

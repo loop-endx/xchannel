@@ -1,5 +1,7 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+
+use tokio::sync::Mutex;
 
 use crate::drivers::modbus::ModbusParameters;
 use crate::error::{XError, XErrorKind, XResult};
@@ -9,6 +11,7 @@ use crate::drivers::modbus::modbus_tcp::ModbusTcp;
 use super::dto::*;
 use super::DriverInfo;
 use super::{device, dto};
+use crate::db;
 use crate::driver::Driver;
 
 enum Device {
@@ -18,13 +21,16 @@ enum Device {
 pub struct DeviceMgr {
     devices: Mutex<HashMap<String, Device>>,
     drivers: HashMap<String, DriverInfo>,
+    db: db::DBLayer,
 }
 
 impl DeviceMgr {
-    pub fn init() -> Arc<Self> {
+    pub async fn init() -> XResult<Arc<Self>> {
+        let db = db::DBLayer::new().await?;
         let mut mgr = DeviceMgr {
             devices: Mutex::new(HashMap::new()),
             drivers: HashMap::new(),
+            db,
         };
 
         mgr.drivers.insert(
@@ -32,20 +38,35 @@ impl DeviceMgr {
             ModbusTcp::default().info(),
         );
 
-        Arc::new(mgr)
+        let mgr = Arc::new(mgr);
+        mgr.load().await?;
+
+        Ok(mgr)
+    }
+
+    pub async fn load(&self) -> XResult<()> {
+        let mut devices = self.devices.lock().await;
+        let de = self.db.query::<db::device::Device>("device").await?;
+
+        for device in de {
+            let d = self.create_device(&device.driver, &device.parameters)?;
+            devices.insert(device.name.to_string(), d);
+        }
+
+        Ok(())
     }
 
     pub fn get_drivers(&self) -> Vec<DriverInfo> {
         self.drivers.values().cloned().collect()
     }
 
-    pub fn add_tags(
+    pub async fn add_tags(
         &self,
         device: &str,
         table: &str,
         tags: &[crate::tag::dto::Tag],
     ) -> XResult<()> {
-        let mut devices = self.devices.lock().unwrap();
+        let mut devices = self.devices.lock().await;
 
         let device = devices.get_mut(device).ok_or_else(|| {
             XError::new(
@@ -61,8 +82,8 @@ impl DeviceMgr {
         Ok(())
     }
 
-    pub fn del_tags(&self, device: &str, table: &str, tags: &[String]) -> XResult<()> {
-        let mut devices = self.devices.lock().unwrap();
+    pub async fn del_tags(&self, device: &str, table: &str, tags: &[String]) -> XResult<()> {
+        let mut devices = self.devices.lock().await;
 
         let device = devices.get_mut(device).ok_or_else(|| {
             XError::new(
@@ -78,8 +99,13 @@ impl DeviceMgr {
         Ok(())
     }
 
-    pub fn get_tags(&self, device: &str, table: &str, limit: Option<u16>) -> XResult<Vec<crate::tag::dto::Tag>> {
-        let devices = self.devices.lock().unwrap();
+    pub async fn get_tags(
+        &self,
+        device: &str,
+        table: &str,
+        limit: Option<u16>,
+    ) -> XResult<Vec<crate::tag::dto::Tag>> {
+        let devices = self.devices.lock().await;
 
         let device = devices.get(device).ok_or_else(|| {
             XError::new(
@@ -93,14 +119,14 @@ impl DeviceMgr {
         }
     }
 
-    pub fn add_table(
+    pub async fn add_table(
         &self,
         device: &str,
         table: &str,
         description: Option<String>,
         parameters: &[dto::Parameter],
     ) -> XResult<()> {
-        let mut devices = self.devices.lock().unwrap();
+        let mut devices = self.devices.lock().await;
 
         let device = devices.get_mut(device).ok_or_else(|| {
             XError::new(
@@ -119,8 +145,8 @@ impl DeviceMgr {
         Ok(())
     }
 
-    pub fn del_table(&self, device: &str, table: &str) -> XResult<()> {
-        let mut devices = self.devices.lock().unwrap();
+    pub async fn del_table(&self, device: &str, table: &str) -> XResult<()> {
+        let mut devices = self.devices.lock().await;
 
         let device = devices.get_mut(device).ok_or_else(|| {
             XError::new(
@@ -136,8 +162,8 @@ impl DeviceMgr {
         Ok(())
     }
 
-    pub fn get_tables(&self, device: &str) -> Vec<dto::GetTables> {
-        let devices = self.devices.lock().unwrap();
+    pub async fn get_tables(&self, device: &str) -> Vec<dto::GetTables> {
+        let devices = self.devices.lock().await;
 
         let device = devices.get(device).unwrap();
 
@@ -161,7 +187,7 @@ impl DeviceMgr {
         }
     }
 
-    pub fn add_device(
+    pub async fn add_device(
         &self,
         device_name: &str,
         driver_name: &str,
@@ -173,7 +199,7 @@ impl DeviceMgr {
                 &format!("driver not found: {driver_name}"),
             ));
         }
-        let mut devices = self.devices.lock().unwrap();
+        let mut devices = self.devices.lock().await;
 
         if devices.contains_key(device_name) {
             return Err(XError::new(
@@ -184,13 +210,24 @@ impl DeviceMgr {
 
         let device = self.create_device(driver_name, parameters)?;
 
+        self.db
+            .create(
+                "device",
+                db::device::Device {
+                    name: device_name.to_string(),
+                    driver: driver_name.to_string(),
+                    parameters: parameters.to_vec(),
+                },
+            )
+            .await?;
+
         devices.insert(device_name.to_string(), device);
 
         Ok(())
     }
 
-    pub fn del_device(&self, device: &str) -> XResult<()> {
-        let mut devices = self.devices.lock().unwrap();
+    pub async fn del_device(&self, device: &str) -> XResult<()> {
+        let mut devices = self.devices.lock().await;
 
         devices.remove(device).map_or_else(
             || {
@@ -203,8 +240,8 @@ impl DeviceMgr {
         )
     }
 
-    pub fn get_devices(&self, driver: Option<String>) -> Vec<DeviceInfo> {
-        let devices = self.devices.lock().unwrap();
+    pub async fn get_devices(&self, driver: Option<String>) -> Vec<DeviceInfo> {
+        let devices = self.devices.lock().await;
 
         devices
             .iter()

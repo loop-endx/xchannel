@@ -12,8 +12,8 @@ pub enum XError {
     TagError(i32, String), // 1003
     #[error("Parameter Error: {0}")]
     ParameterError(String), // 1003
-                            //   #[error("IO Error: {0}")]
-                            //    Io(#[from] std::io::Error), //1101
+    #[error("DB Error: {0}")]
+    DBError(String), // 1101
 }
 
 pub enum XErrorKind {
@@ -21,6 +21,7 @@ pub enum XErrorKind {
     DeviceError,
     TagError,
     ParameterError,
+    DBError,
 }
 
 impl XError {
@@ -31,6 +32,7 @@ impl XError {
             XErrorKind::DriverError => DriverError(msg.to_string()),
             XErrorKind::TagError => TagError(-1, msg.to_string()),
             XErrorKind::ParameterError => ParameterError(msg.to_string()),
+            XErrorKind::DBError => DBError(msg.to_string()),
         }
     }
 }
@@ -43,12 +45,19 @@ impl XError {
             DeviceError(_) => 1002,
             TagError(_, _) => 1003,
             ParameterError(_) => 1004,
+            DBError(_) => 1101,
             //Io(_) => 1101,
         }
     }
 
     pub fn message(&self) -> String {
         self.to_string()
+    }
+}
+
+impl From<surrealdb::Error> for XError {
+    fn from(err: surrealdb::Error) -> Self {
+        XError::new(XErrorKind::DBError, &err.to_string())
     }
 }
 

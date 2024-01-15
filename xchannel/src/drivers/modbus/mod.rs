@@ -5,7 +5,7 @@ pub mod modbus_tcp;
 
 use crate::error::*;
 
-use crate::tag::r#type::Value;
+use crate::tag::vtype::Value;
 
 use crate::driver::tag::Tag;
 
@@ -272,14 +272,16 @@ impl TryFrom<&Tag> for Address {
 #[cfg(test)]
 mod tests {
     use super::{Address, Area};
+    use crate::driver::tag::Tag;
     use crate::error::*;
-    use crate::module::driver::tag::Tag;
-    use crate::module::tag::Value;
+    use crate::tag::vtype::DataType;
+    use crate::tag::vtype::DataType::*;
 
-    fn tag_check(value: Value, str_address: &str, is_ok: bool, check_address: Option<Address>) {
+    fn tag_check(dtype: DataType, str_address: &str, is_ok: bool, check_address: Option<Address>) {
         let tag = &Tag {
             name: "test".to_string(),
-            value,
+            value: dtype.default_value(),
+            dtype,
             address: str_address.to_string(),
         };
 
@@ -294,11 +296,11 @@ mod tests {
 
     #[test]
     fn tag_parse_error() {
-        tag_check(Value::BIT(0), "1.00", false, None);
-        tag_check(Value::BIT(0), "1.065537", false, None);
-        tag_check(Value::BIT(0), "1.265537", false, None);
-        tag_check(Value::UINT8(0), "1.01", false, None);
-        tag_check(Value::UINT8(0), "1.11", false, None);
+        tag_check(BIT, "1.00", false, None);
+        tag_check(BIT, "1.065537", false, None);
+        tag_check(BIT, "1.265537", false, None);
+        tag_check(BYTE, "1.01", false, None);
+        tag_check(BYTE, "1.11", false, None);
     }
 
     #[test]
@@ -311,7 +313,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::BIT(0), "1.H010", true, Some(address));
+        tag_check(BIT, "1.H010", true, Some(address));
     }
 
     #[test]
@@ -324,7 +326,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::BIT(0), "1.01", true, Some(address));
+        tag_check(BIT, "1.01", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -334,7 +336,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::BOOL(false), "1.01", true, Some(address));
+        tag_check(BOOL, "1.01", true, Some(address));
     }
 
     #[test]
@@ -347,7 +349,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::BIT(0), "1.11", true, Some(address));
+        tag_check(BIT, "1.11", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -357,7 +359,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::BOOL(false), "1.11", true, Some(address));
+        tag_check(BOOL, "1.11", true, Some(address));
     }
 
     #[test]
@@ -370,7 +372,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::UINT16(0), "1.31", true, Some(address));
+        tag_check(WORD, "1.31", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -380,7 +382,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::INT16(0), "1.31", true, Some(address));
+        tag_check(INT, "1.31", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -390,7 +392,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::WORD(0), "1.31", true, Some(address));
+        tag_check(WORD, "1.31", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -400,7 +402,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::INT32(0), "1.31", true, Some(address));
+        tag_check(DINT, "1.31", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -410,7 +412,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::UINT32(0), "1.31", true, Some(address));
+        tag_check(UDINT, "1.31", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -420,7 +422,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::FLOAT(0.0), "1.31", true, Some(address));
+        tag_check(FLOAT, "1.31", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -430,7 +432,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::DWORD(0), "1.31", true, Some(address));
+        tag_check(DWORD, "1.31", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -440,7 +442,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::INT64(0), "1.31", true, Some(address));
+        tag_check(LINT, "1.31", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -450,7 +452,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::UINT64(0), "1.31", true, Some(address));
+        tag_check(ULINT, "1.31", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -460,7 +462,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::DOUBLE(0.0), "1.31", true, Some(address));
+        tag_check(DOUBLE, "1.31", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -470,7 +472,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::LWORD(0), "1.31", true, Some(address));
+        tag_check(LWORD, "1.31", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -480,17 +482,9 @@ mod tests {
             bit: 0,
             length: 10,
         };
-        tag_check(
-            Value::STRING {
-                length: 0,
-                str: None,
-            },
-            "1.31.10",
-            true,
-            Some(address),
-        );
+        tag_check(STRING, "1.31.10", true, Some(address));
 
-        let address = Address {
+        let _address = Address {
             slave: 1,
             area: Area::InputRegister,
             address: 0,
@@ -510,7 +504,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::UINT16(0), "1.41", true, Some(address));
+        tag_check(WORD, "1.41", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -520,7 +514,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::INT16(0), "1.41", true, Some(address));
+        tag_check(INT, "1.41", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -530,7 +524,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::WORD(0), "1.41", true, Some(address));
+        tag_check(WORD, "1.41", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -540,7 +534,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::INT32(0), "1.41", true, Some(address));
+        tag_check(DINT, "1.41", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -550,7 +544,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::UINT32(0), "1.41", true, Some(address));
+        tag_check(UDINT, "1.41", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -560,7 +554,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::FLOAT(0.0), "1.41", true, Some(address));
+        tag_check(FLOAT, "1.41", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -570,7 +564,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::DWORD(0), "1.41", true, Some(address));
+        tag_check(DWORD, "1.41", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -580,7 +574,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::INT64(0), "1.41", true, Some(address));
+        tag_check(LINT, "1.41", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -590,7 +584,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::UINT64(0), "1.41", true, Some(address));
+        tag_check(UDINT, "1.41", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -600,7 +594,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::DOUBLE(0.0), "1.41", true, Some(address));
+        tag_check(DOUBLE, "1.41", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -610,7 +604,7 @@ mod tests {
             bit: 0,
             length: 0,
         };
-        tag_check(Value::LWORD(0), "1.41", true, Some(address));
+        tag_check(LWORD, "1.41", true, Some(address));
 
         let address = Address {
             slave: 1,
@@ -620,17 +614,9 @@ mod tests {
             bit: 0,
             length: 10,
         };
-        tag_check(
-            Value::STRING {
-                length: 0,
-                str: None,
-            },
-            "1.41.10",
-            true,
-            Some(address),
-        );
+        tag_check(STRING, "1.41.10", true, Some(address));
 
-        let address = Address {
+        let _address = Address {
             slave: 1,
             area: Area::HoldingRegister,
             address: 0,

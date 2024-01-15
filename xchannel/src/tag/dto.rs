@@ -2,7 +2,7 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::error::*;
 
-use super::r#type::*;
+use super::vtype::*;
 use super::Tag as MTag;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

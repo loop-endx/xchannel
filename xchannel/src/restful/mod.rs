@@ -32,13 +32,6 @@ impl REST {
     }
 
     pub async fn serve(&self, device_mgr: Arc<DeviceMgr>) {
-        //let rt = tokio::runtime::Builder::new_multi_thread()
-        //.worker_threads(4)
-        //.enable_all()
-        //.build()
-        //.unwrap();
-
-        //        async {
         let redirect_dashboard = warp::get()
             .and(warp::path::end())
             .map(|| warp::redirect(Uri::from_static("/web")));
@@ -122,6 +115,5 @@ impl REST {
             .or(get_tags)
             .recover(rejection::handle_rejection);
         warp::serve(routes).run(self.host).await;
-        // }
     }
 }

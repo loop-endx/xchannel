@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use tokio::sync::Mutex;
+use tracing::info;
 
 use crate::drivers::modbus::ModbusParameters;
 use crate::error::{XError, XErrorKind, XResult};
@@ -210,7 +211,8 @@ impl DeviceMgr {
 
         let device = self.create_device(driver_name, parameters)?;
 
-        self.db
+        let re = self
+            .db
             .create(db::device::Device {
                 name: device_name.to_string(),
                 driver: driver_name.to_string(),
@@ -218,23 +220,21 @@ impl DeviceMgr {
             })
             .await?;
 
+        info!("crate device {:?}, id: {:?}", re, re[0].id.id);
+
         devices.insert(device_name.to_string(), device);
 
         Ok(())
     }
 
-    pub async fn del_device(&self, device: &str) -> XResult<()> {
+    pub async fn del_device<'a>(&'a self, device: &'a str) -> XResult<Option<&str>> {
         let mut devices = self.devices.lock().await;
 
-        devices.remove(device).map_or_else(
-            || {
-                Err(XError::new(
-                    XErrorKind::DeviceError,
-                    &format!("device not found: {device}"),
-                ))
-            },
-            |_| Ok(()),
-        )
+        self.db.delete::<db::device::Device>(device).await?;
+
+        devices
+            .remove(device)
+            .map_or_else(|| Ok(None), |_| Ok(Some(device)))
     }
 
     pub async fn get_devices(&self, driver: Option<String>) -> Vec<DeviceInfo> {

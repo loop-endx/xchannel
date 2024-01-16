@@ -1,9 +1,13 @@
 use std::sync::Arc;
 
-use warp::{Rejection, Reply};
+use warp::{http::StatusCode, Rejection, Reply};
 
-use crate::driver::dto::{AddDevice, AddTable, AddTags, DelTags};
+use crate::driver::dto::{AddTable, AddTags, DelTags};
 use crate::driver::mgr::DeviceMgr;
+use crate::error::XError;
+
+use super::request::AddDevice;
+use super::response::{DelDevice, ErrorResponse, Response};
 
 pub async fn get_drivers(device_mgr: Arc<DeviceMgr>) -> Result<impl Reply, Rejection> {
     Ok(warp::reply::json(&device_mgr.get_drivers()))
@@ -13,12 +17,20 @@ pub async fn get_devices(
     driver: Option<String>,
     device_mgr: Arc<DeviceMgr>,
 ) -> Result<impl Reply, Rejection> {
-    Ok(warp::reply::json(&device_mgr.get_devices(driver).await))
+    let devices = device_mgr.get_devices(driver).await;
+
+    Ok(Response::with_status(&devices, StatusCode::OK))
 }
 
 pub async fn del_device(name: String, device_mgr: Arc<DeviceMgr>) -> Result<impl Reply, Rejection> {
-    device_mgr.del_device(&name).await?;
-    Ok(warp::reply())
+    if let Some(device) = device_mgr.del_device(&name).await? {
+        Ok(Response::with_status(&DelDevice { device }, StatusCode::OK))
+    } else {
+        Ok(ErrorResponse::error(
+            &XError::DeviceError(format!("{name} not found")),
+            StatusCode::NOT_FOUND,
+        ))
+    }
 }
 
 pub async fn add_device(
@@ -29,7 +41,7 @@ pub async fn add_device(
         .add_device(&device.name, &device.driver, &device.parameters)
         .await?;
 
-    Ok(warp::reply())
+    Ok(ErrorResponse::success())
 }
 
 pub async fn add_table(

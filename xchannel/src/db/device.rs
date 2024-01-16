@@ -15,6 +15,10 @@ impl DB for Device {
     fn table_name(&self) -> &str {
         "device"
     }
+
+    fn key_name(&self) -> &str {
+        "name"
+    }
 }
 
 impl Default for Device {

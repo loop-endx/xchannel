@@ -42,7 +42,7 @@ impl XError {
 }
 
 impl XError {
-    pub fn code(&self) -> u64 {
+    pub fn code(&self) -> i64 {
         use XError::*;
         match self {
             DriverError(_) => 1001,

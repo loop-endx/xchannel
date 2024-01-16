@@ -29,12 +29,6 @@ pub struct Parameter {
     pub value: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct AddDevice {
-    pub name: String,
-    pub driver: String,
-    pub parameters: Vec<Parameter>,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddTable {

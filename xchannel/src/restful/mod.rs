@@ -8,6 +8,8 @@ use crate::driver::mgr::DeviceMgr;
 
 mod handler;
 mod rejection;
+mod request;
+mod response;
 
 #[derive(Debug)]
 pub struct REST {

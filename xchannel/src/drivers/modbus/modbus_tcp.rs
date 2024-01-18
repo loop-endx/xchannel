@@ -1,14 +1,15 @@
-use crate::driver::{Driver, DriverInfo};
+use crate::module::driver::{Driver, DriverInfo, Validate};
 
 use crate::error::XResult;
+use crate::module::driver::{Parameter, Setting};
 
-pub struct Setting {
-    pub host: String,
-    pub port: u16,
-    pub timeout: u16,
-}
+//pub struct Setting {
+//pub host: String,
+//pub port: u16,
+//pub timeout: u16,
+//}
 
-use crate::driver::dto;
+//use crate::driver::dto;
 
 pub struct ModbusTcpContext {}
 
@@ -44,17 +45,23 @@ impl Driver for ModbusTcp {
         }
     }
 
-    fn validate(&self, _tags: Vec<crate::tag::Tag>) -> XResult<()> {
-        //for (i, tag) in tags.iter().enumerate() {
-        //if let Err(err::XError) = tag.try_into() {
-        //return Err(err.with_index(i as i32 + 1));
-        //}
-        //}
+    //fn validate(&self, _tags: Vec<crate::tag::Tag>) -> XResult<()> {
+    ////for (i, tag) in tags.iter().enumerate() {
+    ////if let Err(err::XError) = tag.try_into() {
+    ////return Err(err.with_index(i as i32 + 1));
+    ////}
+    ////}
 
+    //Ok(())
+    //}
+
+    fn setting(&self, _parameters: &Setting) -> XResult<()> {
         Ok(())
     }
+}
 
-    fn setting(&self, _parameters: &[dto::Parameter]) -> XResult<()> {
+impl Validate for ModbusTcp {
+    fn table_parameter(&self, _parameter: &Parameter) -> XResult<()> {
         Ok(())
     }
 }

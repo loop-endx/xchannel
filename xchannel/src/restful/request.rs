@@ -1,10 +1,17 @@
 use serde::Deserialize;
 
-use crate::driver::dto::Parameter;
+use crate::module::driver::{Parameter, Setting};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct AddDevice {
     pub name: String,
     pub driver: String,
-    pub parameters: Vec<Parameter>,
+    pub setting: Option<Setting>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AddTable {
+    pub name: String,
+    pub parameter: Parameter,
+    pub description: Option<String>,
 }

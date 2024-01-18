@@ -29,15 +29,6 @@ pub struct Parameter {
     pub value: String,
 }
 
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AddTable {
-    pub device: String,
-    pub name: String,
-    pub parameters: Vec<Parameter>,
-    pub description: Option<String>,
-}
-
 #[derive(Debug, Clone, Deserialize)]
 pub struct AddTags {
     pub device: String,

@@ -5,40 +5,39 @@ pub mod modbus_tcp;
 
 use crate::error::*;
 
-use crate::tag::vtype::Value;
+use crate::module::driver::Tag;
+use crate::module::value::Value;
 
-use crate::driver::tag::Tag;
+//pub struct ModbusParameters {
+//pub slave_id: u8,
+//}
 
-pub struct ModbusParameters {
-    pub slave_id: u8,
-}
+//impl TryFrom<&[crate::driver::dto::Parameter]> for ModbusParameters {
+//type Error = XError;
 
-impl TryFrom<&[crate::driver::dto::Parameter]> for ModbusParameters {
-    type Error = XError;
+//fn try_from(parameters: &[crate::driver::dto::Parameter]) -> XResult<Self> {
+//let mut slave_id = 1;
 
-    fn try_from(parameters: &[crate::driver::dto::Parameter]) -> XResult<Self> {
-        let mut slave_id = 1;
+//for parameter in parameters {
+//match parameter.name.as_str() {
+//"slave_id" => {
+//slave_id = parameter
+//.value
+//.parse::<u8>()
+//.map_err(|_| XError::new(XErrorKind::ParameterError, "invalid slave id"))?;
+//}
+//_ => {
+//return Err(XError::new(
+//XErrorKind::ParameterError,
+//&format!("invalid parameter: {}", parameter.name),
+//))
+//}
+//}
+//}
 
-        for parameter in parameters {
-            match parameter.name.as_str() {
-                "slave_id" => {
-                    slave_id = parameter
-                        .value
-                        .parse::<u8>()
-                        .map_err(|_| XError::new(XErrorKind::ParameterError, "invalid slave id"))?;
-                }
-                _ => {
-                    return Err(XError::new(
-                        XErrorKind::ParameterError,
-                        &format!("invalid parameter: {}", parameter.name),
-                    ))
-                }
-            }
-        }
-
-        Ok(ModbusParameters { slave_id })
-    }
-}
+//Ok(ModbusParameters { slave_id })
+//}
+//}
 
 #[derive(PartialEq, Debug)]
 pub enum Area {

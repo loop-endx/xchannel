@@ -2,14 +2,17 @@ use tracing::{error, info, level_filters::LevelFilter};
 use tracing_appender;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Layer, Registry};
 
-mod db;
-mod driver;
+//mod db;
+//mod driver;
 mod drivers;
 mod error;
 mod restful;
-mod tag;
+//mod tag;
 
-use driver::mgr;
+mod module;
+
+//use driver::mgr;
+use module::device_manager::DeviceMgr;
 
 use restful::REST;
 
@@ -30,7 +33,7 @@ async fn main() {
         .with(file_layer)
         .init();
 
-    let device_mgr = mgr::DeviceMgr::init().await;
+    let device_mgr = DeviceMgr::init().await;
     if let Err(e) = device_mgr {
         error!("Error: {:?}", e);
         return;

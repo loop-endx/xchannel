@@ -8,6 +8,7 @@ use surrealdb::sql::Thing;
 use surrealdb::Surreal;
 
 pub mod device;
+pub mod table;
 
 use crate::error::XResult;
 
@@ -32,7 +33,7 @@ impl DBLayer {
         let db = Surreal::new::<RocksDb>("data/xchannel.db").await?;
 
         db.use_ns("xchannel").use_db("xchannel").await?;
-        db.query(Self::read_sql("xchannel/sql/init.sql")?).await?;
+        db.query(Self::read_sql("xchannel/sql/init.surql")?).await?;
 
         Ok(Self { db })
     }

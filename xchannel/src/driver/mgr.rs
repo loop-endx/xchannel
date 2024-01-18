@@ -120,32 +120,6 @@ impl DeviceMgr {
         }
     }
 
-    pub async fn add_table(
-        &self,
-        device: &str,
-        table: &str,
-        description: Option<String>,
-        parameters: &[dto::Parameter],
-    ) -> XResult<()> {
-        let mut devices = self.devices.lock().await;
-
-        let device = devices.get_mut(device).ok_or_else(|| {
-            XError::new(
-                XErrorKind::DeviceError,
-                &format!("device not found: {device}"),
-            )
-        })?;
-
-        match device {
-            Device::ModbusTCP(device) => {
-                let mp: ModbusParameters = parameters.try_into()?;
-                device.add_table(table.to_string(), description, mp.slave_id)?;
-            }
-        }
-
-        Ok(())
-    }
-
     pub async fn del_table(&self, device: &str, table: &str) -> XResult<()> {
         let mut devices = self.devices.lock().await;
 
@@ -163,13 +137,18 @@ impl DeviceMgr {
         Ok(())
     }
 
-    pub async fn get_tables(&self, device: &str) -> Vec<dto::GetTables> {
+    pub async fn get_tables(&self, device: &str) -> XResult<Vec<dto::GetTables>> {
         let devices = self.devices.lock().await;
 
-        let device = devices.get(device).unwrap();
-
-        match device {
-            Device::ModbusTCP(device) => device.get_tables(),
+        if let Some(dev) = devices.get(device) {
+            match dev {
+                Device::ModbusTCP(dev) => Ok(dev.get_tables()),
+            }
+        } else {
+            Err(XError::new(
+                XErrorKind::DeviceError,
+                &format!("device not found {device}"),
+            ))
         }
     }
 
@@ -258,5 +237,44 @@ impl DeviceMgr {
                 },
             })
             .collect()
+    }
+
+    pub async fn add_table(
+        &self,
+        device: &str,
+        table: &str,
+        description: Option<String>,
+        parameters: &[dto::Parameter],
+    ) -> XResult<()> {
+        let mut devices = self.devices.lock().await;
+
+        let dev = devices.get_mut(device).ok_or_else(|| {
+            XError::new(
+                XErrorKind::DeviceError,
+                &format!("device not found: {device}"),
+            )
+        })?;
+
+        match dev {
+            Device::ModbusTCP(dev) => {
+                let mp: ModbusParameters = parameters.try_into()?;
+                dev.add_table(table.to_string(), description.clone(), mp.slave_id)?;
+                let re = self
+                    .db
+                    .create(db::table::Table {
+                        device: device.to_string(),
+                        name: table.to_string(),
+                        description,
+                        param: mp.slave_id,
+                    })
+                    .await?;
+                info!(
+                    "crate table {table}, slave id {} in {device}, re {:?}",
+                    mp.slave_id, re
+                );
+            }
+        }
+
+        Ok(())
     }
 }

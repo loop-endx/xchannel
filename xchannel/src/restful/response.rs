@@ -13,6 +13,11 @@ pub struct ErrorResponse<'a> {
     message: &'a str,
 }
 
+#[derive(Debug, Clone, Serialize)]
+struct ResponseMsg<'a> {
+    message: &'a str,
+}
+
 impl<'a> ErrorResponse<'a> {
     pub fn success() -> WithStatus<Json> {
         Self::response(0, "success", StatusCode::OK)
@@ -38,6 +43,14 @@ pub struct Response;
 impl Response {
     pub fn with_status<T: Serialize>(body: &T, status: StatusCode) -> WithStatus<Json> {
         reply::with_status(reply::json(body), status)
+    }
+
+    pub fn message(msg: &str) -> WithStatus<Json> {
+        Self::response(msg, StatusCode::OK)
+    }
+
+    pub fn response(message: &str, status: StatusCode) -> WithStatus<Json> {
+        reply::with_status(reply::json(&ResponseMsg { message }), status)
     }
 }
 

@@ -8,13 +8,13 @@ use crate::tag::{dto::Tag as DtoTag, table::TagTable};
 use super::dto::Parameter;
 use super::{dto, Driver};
 
-pub struct Device<T> {
+pub struct Device<T: std::fmt::Display> {
     driver: Box<dyn Driver + Send>,
 
     tables: Mutex<HashMap<String, TagTable<T>>>,
 }
 
-impl<T: Clone> Device<T> {
+impl<T: Clone + std::fmt::Display> Device<T> {
     pub fn new(driver: Box<dyn Driver + Send>) -> Self {
         Device {
             driver,
@@ -52,12 +52,12 @@ impl<T: Clone> Device<T> {
 
         t.iter()
             .map(|(_, table)| {
-                let (name, description, _param) = table.get_info();
+                let (name, description, param) = table.get_info();
                 dto::GetTables {
                     name,
                     parameters: vec![Parameter {
-                        name: "param".to_string(),
-                        value: "11".to_string(),
+                        name: "slave_id".to_string(),
+                        value: param.to_string(),
                     }],
                     description,
                 }

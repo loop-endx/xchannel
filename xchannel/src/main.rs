@@ -2,16 +2,12 @@ use tracing::{error, info, level_filters::LevelFilter};
 use tracing_appender;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Layer, Registry};
 
-//mod db;
-//mod driver;
 mod drivers;
 mod error;
 mod restful;
-//mod tag;
 
 mod module;
 
-//use driver::mgr;
 use module::device_manager::DeviceMgr;
 
 use restful::REST;

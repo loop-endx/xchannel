@@ -7,6 +7,7 @@ use surrealdb::Surreal;
 
 pub mod device;
 pub mod table;
+pub mod tag;
 
 use crate::error::XResult;
 

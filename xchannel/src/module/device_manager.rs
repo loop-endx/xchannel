@@ -10,11 +10,13 @@ use crate::error::*;
 use super::db;
 use super::db::device::Device as DBDevice;
 use super::db::table::Table as DBTable;
+use super::db::tag::Tag as DBTag;
 use super::device::Device;
 use super::device::DeviceInfo;
 use super::driver::DriverInfo;
 use super::driver::{Driver, Parameter, Setting};
 use super::table::TableInfo;
+use super::tag::Tag;
 
 pub struct DeviceMgr {
     devices: Mutex<HashMap<String, (String, Device)>>,
@@ -43,6 +45,10 @@ impl DeviceMgr {
         mgr.load().await?;
 
         Ok(mgr)
+    }
+
+    pub fn get_drivers(&self) -> Vec<DriverInfo> {
+        self.drivers.values().cloned().collect()
     }
 
     // name, id, driver
@@ -154,20 +160,95 @@ impl DeviceMgr {
             ));
         }
 
-        let (id, device) = devices.get(device).unwrap();
+        let (_, dev) = devices.get(device).unwrap();
 
-        device.add_table(name, description.clone(), param)?;
+        dev.add_table(name, description.clone(), param)?;
 
-        DBTable::add(
-            &self.db,
-            name,
-            DBDevice::record_link(id),
-            description,
-            param,
-        )
-        .await?;
+        DBTable::add(&self.db, name, device, description, param).await?;
 
         Ok(())
+    }
+
+    pub async fn del_table<'a>(
+        &'a self,
+        device: &'a str,
+        name: &'a str,
+    ) -> XResult<Option<&'a str>> {
+        let devices = self.devices.lock().await;
+
+        if let Some((_, dev)) = devices.get(device) {
+            let re = dev.del_table(name);
+            DBTable::delete(&self.db, device, name).await?;
+
+            re
+        } else {
+            Err(XError::new(
+                XErrorKind::DeviceError,
+                &format!("{device} not found"),
+            ))
+        }
+    }
+
+    pub async fn get_tags(
+        &self,
+        device: &str,
+        table: &str,
+        name: Option<String>,
+    ) -> XResult<Vec<Tag>> {
+        let devices = self.devices.lock().await;
+
+        if let Some((_, dev)) = devices.get(device) {
+            dev.get_tags(table, name)
+        } else {
+            Err(XError::new(
+                XErrorKind::DeviceError,
+                &format!("{device} not found"),
+            ))
+        }
+    }
+
+    pub async fn add_tags(&self, device: &str, table: &str, tags: Vec<Tag>) -> XResult<()> {
+        let devices = self.devices.lock().await;
+
+        if let Some((_, dev)) = devices.get(device) {
+            let result = dev.add_tags(table, &tags);
+            let mut index = tags.len() as i32;
+
+            if let Err(err) = &result {
+                if err.kind() != XErrorKind::TagError {
+                    return Err(err.clone());
+                } else {
+                    index = err.get_index() - 1;
+                }
+            }
+            DBTag::add(
+                &self.db,
+                device,
+                table,
+                tags.iter().take(index as usize).collect(),
+            )
+            .await?;
+            result
+        } else {
+            Err(XError::new(
+                XErrorKind::DeviceError,
+                &format!("{device} not found"),
+            ))
+        }
+    }
+
+    pub async fn del_tags(&self, device: &str, table: &str, tags: Vec<String>) -> XResult<()> {
+        let devices = self.devices.lock().await;
+
+        if let Some((_, dev)) = devices.get(device) {
+            let _ = dev.del_tags(table, &tags);
+            DBTag::delete(&self.db, device, table, &tags).await
+        } else {
+            Err(XError::new(
+                XErrorKind::DeviceError,
+                &format!("{device} not found"),
+            ))
+        }
     }
 
     fn create_device(
@@ -201,9 +282,15 @@ impl DeviceMgr {
             let d = self.create_device(&device.name, &device.driver, &device.setting)?;
             let id = device.id.unwrap().id.to_string();
 
-            let tables = DBTable::select(&self.db, DBDevice::record_link(&id)).await?;
+            let tables = DBTable::select(&self.db, &device.name).await?;
             for table in tables {
                 d.add_table(&table.name, table.description, &table.parameter)?;
+
+                let tags = DBTag::select(&self.db, &device.name, &table.name).await;
+
+                if let Ok(tags) = tags {
+                    d.add_tags(&table.name, &tags)?;
+                }
             }
 
             devices.insert(device.name.to_string(), (id.clone(), d));

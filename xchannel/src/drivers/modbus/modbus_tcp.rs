@@ -1,4 +1,4 @@
-use crate::module::driver::{Driver, DriverInfo, Validate};
+use crate::module::driver::{Driver, DriverInfo, Tag as DTag, Validate};
 
 use crate::error::XResult;
 use crate::module::driver::{Parameter, Setting};
@@ -62,6 +62,10 @@ impl Driver for ModbusTcp {
 
 impl Validate for ModbusTcp {
     fn table_parameter(&self, _parameter: &Parameter) -> XResult<()> {
+        Ok(())
+    }
+
+    fn tag(&self, _tags: &[DTag]) -> XResult<()> {
         Ok(())
     }
 }

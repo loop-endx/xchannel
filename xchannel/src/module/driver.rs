@@ -23,6 +23,7 @@ pub type Setting = Vec<Parameter>;
 
 pub trait Validate {
     fn table_parameter(&self, parameter: &Parameter) -> XResult<()>;
+	fn tag(&self, tags: &[Tag]) -> XResult<()>;
 }
 
 #[async_trait]
@@ -40,13 +41,13 @@ pub struct Tag {
     pub address: String,
 }
 
-impl From<MTag> for Tag {
-    fn from(tag: MTag) -> Self {
+impl From<&MTag> for Tag {
+    fn from(tag: &MTag) -> Self {
         Tag {
-            name: tag.name,
-            value: tag.value,
-            dtype: tag.dtype,
-            address: tag.address.unwrap(),
+            name: tag.name.clone(),
+            value: tag.value.clone(),
+            dtype: tag.dtype.clone(),
+            address: tag.address.clone().unwrap(),
         }
     }
 }

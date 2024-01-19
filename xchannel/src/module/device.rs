@@ -5,8 +5,9 @@ use std::sync::Mutex;
 
 use crate::error::*;
 
-use super::driver::{Driver, Parameter, Setting};
+use super::driver::{Driver, Parameter, Setting, Tag as DTag};
 use super::table::{Table, TableInfo};
+use super::tag::Tag;
 
 pub struct Device {
     name: String,
@@ -81,6 +82,14 @@ impl Device {
         Ok(())
     }
 
+    pub fn del_table<'a, 'b>(&'b self, name: &'a str) -> XResult<Option<&'a str>> {
+        let mut tables = self.tables.lock().unwrap();
+
+        tables
+            .remove(name)
+            .map_or_else(|| Ok(None), |_| Ok(Some(name)))
+    }
+
     pub fn get_tables(&self, name: Option<String>) -> Vec<TableInfo> {
         let tables = self.tables.lock().unwrap();
 
@@ -95,5 +104,50 @@ impl Device {
             })
             .map(|(_, table)| table.info())
             .collect()
+    }
+
+    pub fn get_tags(&self, table: &str, name: Option<String>) -> XResult<Vec<Tag>> {
+        let tables = self.tables.lock().unwrap();
+
+        if let Some(table) = tables.get(table) {
+            table.get_tags(name)
+        } else {
+            Err(XError::new(
+                XErrorKind::TableError,
+                &format!("{table} not found"),
+            ))
+        }
+    }
+
+    pub fn add_tags(&self, table: &str, tags: &[Tag]) -> XResult<()> {
+        let tables = self.tables.lock().unwrap();
+
+        if let Some(table) = tables.get(table) {
+            let dtags: Vec<DTag> = tags
+                .iter()
+                .filter(|tag| tag.address.is_some())
+                .map(|tag| tag.into())
+                .collect();
+            self.driver.tag(&dtags)?;
+            table.add_tags(tags)
+        } else {
+            Err(XError::new(
+                XErrorKind::TableError,
+                &format!("{table} not found"),
+            ))
+        }
+    }
+
+    pub fn del_tags(&self, table: &str, tags: &[String]) -> XResult<()> {
+        let tables = self.tables.lock().unwrap();
+
+        if let Some(table) = tables.get(table) {
+            table.del_tags(tags)
+        } else {
+            Err(XError::new(
+                XErrorKind::TableError,
+                &format!("{table} not found"),
+            ))
+        }
     }
 }

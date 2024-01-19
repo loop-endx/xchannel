@@ -41,11 +41,11 @@ impl REST {
             .and(warp::path("web"))
             .and(warp::fs::dir("home"));
 
-        //let get_drivers = warp::get()
-        //.and(warp::path!("api" / "v1" / "driver"))
-        //.and(warp::path::end())
-        //.and(Self::with_device_mgr(device_mgr.clone()))
-        //.and_then(handler::get_drivers);
+        let get_drivers = warp::get()
+            .and(warp::path!("api" / "v1" / "driver"))
+            .and(warp::path::end())
+            .and(Self::with_device_mgr(device_mgr.clone()))
+            .and_then(handler::get_drivers);
 
         let get_devices = warp::get()
             .and(warp::path!("api" / "v1" / "device"))
@@ -77,12 +77,10 @@ impl REST {
             .and(Self::with_device_mgr(device_mgr.clone()))
             .and_then(handler::add_table);
 
-        //let del_tag_table = warp::delete()
-        //.and(warp::path!("api" / "v1" / "device" / "table"))
-        //.and(warp::path::param())
-        //.and(warp::path::param())
-        //.and(Self::with_device_mgr(device_mgr.clone()))
-        //.and_then(handler::del_table);
+        let del_tag_table = warp::delete()
+            .and(warp::path!("api" / "v1" / String / "table" / String))
+            .and(Self::with_device_mgr(device_mgr.clone()))
+            .and_then(handler::del_table);
 
         let get_tag_tables = warp::get()
             .and(warp::path!("api" / "v1" / String / "table"))
@@ -93,37 +91,39 @@ impl REST {
             .and(Self::with_device_mgr(device_mgr.clone()))
             .and_then(handler::get_tables);
 
-        //let add_tags = warp::post()
-        //.and(warp::path!("api" / "v1" / "device" / "table" / "tag"))
-        //.and(warp::body::json())
-        //.and(Self::with_device_mgr(device_mgr.clone()))
-        //.and_then(handler::add_tags);
+        let add_tags = warp::post()
+            .and(warp::path!("api" / "v1" / String / String / "tag"))
+            .and(warp::body::json())
+            .and(Self::with_device_mgr(device_mgr.clone()))
+            .and_then(handler::add_tags);
 
-        //let del_tags = warp::delete()
-        //.and(warp::path!("api" / "v1" / "device" / "table" / "tag"))
-        //.and(warp::body::json())
-        //.and(Self::with_device_mgr(device_mgr.clone()))
-        //.and_then(handler::del_tags);
+        let del_tags = warp::delete()
+            .and(warp::path!("api" / "v1" / String / String / "tag"))
+            .and(warp::body::json())
+            .and(Self::with_device_mgr(device_mgr.clone()))
+            .and_then(handler::del_tags);
 
-        //let get_tags = warp::get()
-        //.and(warp::path!("api" / "v1" / "device" / "table" / "tag"))
-        //.and(warp::path::param())
-        //.and(warp::path::param())
-        //.and(Self::with_device_mgr(device_mgr.clone()))
-        //.and_then(handler::get_tags);
+        let get_tags = warp::get()
+            .and(warp::path!("api" / "v1" / String / String / "tag"))
+            .and(warp::query::<HashMap<String, String>>())
+            .map(|device, table, query: HashMap<String, String>| {
+                (device, table, query.get("name").map(|x| x.to_string()))
+            })
+            .and(Self::with_device_mgr(device_mgr.clone()))
+            .and_then(handler::get_tags);
 
         let routes = redirect_dashboard
             .or(dashboard)
-            //  .or(get_drivers)
+            .or(get_drivers)
             .or(get_devices)
             .or(add_device)
             .or(del_device)
             .or(add_tag_table)
-            //.or(del_tag_table)
+            .or(del_tag_table)
             .or(get_tag_tables)
-            //.or(add_tags)
-            //.or(del_tags)
-            //.or(get_tags)
+            .or(add_tags)
+            .or(del_tags)
+            .or(get_tags)
             .recover(rejection::handle_rejection);
         warp::serve(routes).run(self.host).await;
     }

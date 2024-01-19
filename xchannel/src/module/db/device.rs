@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
-use tracing::{info, trace};
+use tracing::trace;
 
 use crate::error::*;
 
 use super::super::driver::Setting;
+use super::table::Table;
 use super::DBLayer;
 use super::Record;
 
@@ -20,10 +21,6 @@ pub struct Device {
 impl Device {
     const TABLE_NAME: &'static str = "device";
 
-    pub fn record_link(id: &str) -> Thing {
-        Thing::from((Self::TABLE_NAME, id))
-    }
-
     pub async fn select(db: &DBLayer) -> XResult<Vec<Device>> {
         let re = db.db.select(Self::TABLE_NAME).await?;
         trace!("load {:?}", re);
@@ -32,7 +29,7 @@ impl Device {
 
     pub async fn add(db: &DBLayer, device: &Device) -> XResult<String> {
         let re: Vec<Record> = db.db.create(Self::TABLE_NAME).content(device).await?;
-        info!("store device {:?}", re);
+        trace!("store device {:?}", re);
         if let Some(re) = re.first() {
             Ok(re.id.id.to_string())
         } else {
@@ -49,6 +46,8 @@ impl Device {
             .await?
             .check()?;
         trace!("delete response {:?}", re);
+
+        Table::delete_all(db, name).await?;
         Ok(())
     }
 }

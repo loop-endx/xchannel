@@ -2,7 +2,7 @@ use serde_derive::{Deserialize, Serialize};
 use thiserror::Error;
 
 //0xFF
-#[derive(Error, Debug, Serialize, Deserialize)]
+#[derive(Error, Clone, Debug, Serialize, Deserialize)]
 pub enum XError {
     #[error("Driver Error: {0}")]
     DriverError(String), // 1001
@@ -20,6 +20,7 @@ pub enum XError {
     IOError(String), // 1201
 }
 
+#[derive(Debug, PartialEq)]
 pub enum XErrorKind {
     DriverError,
     DeviceError,
@@ -29,6 +30,8 @@ pub enum XErrorKind {
     DBError,
     IOError,
 }
+
+pub type XResult<T> = std::result::Result<T, XError>;
 
 impl XError {
     pub fn new(kind: XErrorKind, msg: &str) -> XError {
@@ -43,9 +46,7 @@ impl XError {
             XErrorKind::IOError => IOError(msg.to_string()),
         }
     }
-}
 
-impl XError {
     pub fn code(&self) -> i64 {
         use XError::*;
         match self {
@@ -62,6 +63,35 @@ impl XError {
     pub fn message(&self) -> String {
         self.to_string()
     }
+
+    pub fn with_index(&self, index: i32) -> XError {
+        use XError::*;
+        match self {
+            TagError(_, msg) => TagError(index, msg.to_string()),
+            _ => self.clone(),
+        }
+    }
+
+    pub fn get_index(&self) -> i32 {
+        use XError::*;
+        match self {
+            TagError(index, _) => *index,
+            _ => -1,
+        }
+    }
+
+    pub fn kind(&self) -> XErrorKind {
+        use XError::*;
+        match self {
+            DriverError(_) => XErrorKind::DriverError,
+            DeviceError(_) => XErrorKind::DeviceError,
+            TableError(_) => XErrorKind::TableError,
+            TagError(_, _) => XErrorKind::TagError,
+            ParameterError(_) => XErrorKind::ParameterError,
+            DBError(_) => XErrorKind::DBError,
+            IOError(_) => XErrorKind::IOError,
+        }
+    }
 }
 
 impl From<surrealdb::Error> for XError {
@@ -75,7 +105,5 @@ impl From<std::io::Error> for XError {
         XError::new(XErrorKind::IOError, &err.to_string())
     }
 }
-
-pub type XResult<T> = std::result::Result<T, XError>;
 
 impl warp::reject::Reject for XError {}

@@ -15,6 +15,7 @@ pub struct ErrorResponse<'a> {
 
 #[derive(Debug, Clone, Serialize)]
 struct ResponseMsg<'a> {
+    index: i32,
     message: &'a str,
 }
 
@@ -49,12 +50,21 @@ impl Response {
         Self::response(msg, StatusCode::OK)
     }
 
+    pub fn partial(index: i32, msg:&str) -> WithStatus<Json> {
+        reply::with_status(reply::json(&ResponseMsg { index, message: msg }), StatusCode::PARTIAL_CONTENT)
+    }
+
     pub fn response(message: &str, status: StatusCode) -> WithStatus<Json> {
-        reply::with_status(reply::json(&ResponseMsg { message }), status)
+        reply::with_status(reply::json(&ResponseMsg { index: 0, message }), status)
     }
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct DelDevice<'a> {
     pub device: &'a str,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DelTable<'a> {
+    pub table: &'a str,
 }
